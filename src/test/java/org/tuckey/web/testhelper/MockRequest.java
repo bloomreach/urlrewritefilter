@@ -34,6 +34,8 @@
  */
 package org.tuckey.web.testhelper;
 
+import org.tuckey.web.filters.urlrewrite.utils.RewriteUtils;
+
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
@@ -57,6 +59,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -195,7 +198,10 @@ public class MockRequest implements HttpServletRequest {
     }
 
     public String getRequestURI() {
-        return requestURI;
+        if (requestURI == null) {
+            return null;
+        }
+        return RewriteUtils.uriEncodeParts(requestURI);
     }
 
     public StringBuffer getRequestURL() {
@@ -229,7 +235,7 @@ public class MockRequest implements HttpServletRequest {
     public MockSession getMockSession() {
         return session;
     }
-    
+
     public boolean isRequestedSessionIdValid() {
         return requestedSessionIdValid;
     }
@@ -259,7 +265,7 @@ public class MockRequest implements HttpServletRequest {
 
     @Override
     public Collection<Part> getParts() throws IOException, ServletException {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override

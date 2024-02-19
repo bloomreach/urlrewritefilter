@@ -67,9 +67,9 @@ public class VariableReplacerTest extends TestCase {
 
     public final void testReplaceContextVars() {
     	ServletContext servletContext = request.getSession(true).getServletContext();
-    	servletContext.setAttribute("host", "http://testurl");    	
+    	servletContext.setAttribute("host", "http://testurl");
     	//request.getMockSession().setServletContext(servletContext);
-    	
+
         final String result = VariableReplacer.replaceWithServletContext("%{context:host}", request, servletContext);
 
         assertEquals("http://testurl", result);
@@ -95,4 +95,13 @@ public class VariableReplacerTest extends TestCase {
 
         assertEquals("fizz", result);
     }
+
+    public final void testBadVars() {
+        request.setAttribute("s3.static.bucket", "mybucket");
+        final String result = VariableReplacer.replace("http://%{attribute:s3.static.bucket}", request);
+
+        assertEquals("http://mybucket", result);
+    }
+
+
 }

@@ -49,8 +49,10 @@ public class RuleExecutionOutput {
     private boolean ruleMatched = false;
     private boolean stopFilterMatch = false;
     private boolean noSubstitution = false;
-    private boolean dropCookies = true;
     private RewriteMatch rewriteMatch;
+    private boolean dropCookies = true;
+    private boolean followRedirects = false;
+    private boolean useSystemProperties = false;
 
     /**
      * Will perform the action defined by the rule ie, redirect or passthrough.
@@ -62,19 +64,9 @@ public class RuleExecutionOutput {
         NormalRewrittenUrl rewrittenRequest = new NormalRewrittenUrl(ruleExecutionOutput);
         String toUrl = ruleExecutionOutput.getReplacedUrl();
 
-        if (ruleExecutionOutput.isNoSubstitution()) {
+        if (toType == NormalRule.TO_TYPE_PERMANENT_REDIRECT) {
             if (log.isDebugEnabled()) {
-                log.debug("needs no substitution");
-            }
-        } else if (toType == NormalRule.TO_TYPE_REDIRECT) {
-            if (log.isDebugEnabled()) {
-                log.debug("needs to be redirected to " + toUrl);
-            }
-            rewrittenRequest.setRedirect(true);
-
-        } else if (toType == NormalRule.TO_TYPE_PERMANENT_REDIRECT) {
-            if (log.isDebugEnabled()) {
-                log.debug("needs to be permanentely redirected to " + toUrl);
+                log.debug("needs to be permanently redirected to " + toUrl);
             }
             rewrittenRequest.setPermanentRedirect(true);
 
@@ -83,6 +75,12 @@ public class RuleExecutionOutput {
                 log.debug("needs to be temporarily redirected to " + toUrl);
             }
             rewrittenRequest.setTemporaryRedirect(true);
+
+        } else if (toType == NormalRule.TO_TYPE_REDIRECT) {
+                if (log.isDebugEnabled()) {
+                    log.debug("needs to be redirected to " + toUrl);
+                }
+                rewrittenRequest.setRedirect(true);
 
         } else if (toType == NormalRule.TO_TYPE_308_PERMANENT_REDIRECT) {
             if (log.isDebugEnabled()) {
@@ -95,7 +93,12 @@ public class RuleExecutionOutput {
                 log.debug("needs to be temporarily redirected (with response code 307) to " + toUrl);
             }
             rewrittenRequest.set307TemporaryRedirect(true);
+        }
 
+        if (ruleExecutionOutput.isNoSubstitution()) {
+            if (log.isDebugEnabled()) {
+                log.debug("needs no substitution");
+            }
         } else if (toType == NormalRule.TO_TYPE_PRE_INCLUDE) {
             if (log.isDebugEnabled()) {
                 log.debug(toUrl + " needs to be pre included");
@@ -192,4 +195,19 @@ public class RuleExecutionOutput {
       return dropCookies;
     }
 
+    public void setFollowRedirects(final boolean followRedirects) {
+        this.followRedirects = followRedirects;
+    }
+
+    public boolean isFollowRedirects() {
+        return followRedirects;
+    }
+
+    public void setUseSystemProperties(final boolean useSystemProperties) {
+        this.useSystemProperties = useSystemProperties;
+    }
+
+    public boolean isUseSystemProperties() {
+        return useSystemProperties;
+    }
 }

@@ -73,6 +73,8 @@ public class NormalRule extends RuleBase implements Rule {
     private boolean queryStringAppend = false;
     private String toContextStr = null;
     private ServletContext toServletContext = null;
+    private boolean followRedirects = false;
+    private boolean useSystemProperties = false;
 
     /**
      * Constructor.
@@ -107,6 +109,8 @@ public class NormalRule extends RuleBase implements Rule {
             }
         }
         if ( toServletContext != null ) ruleExecutionOutput.setReplacedUrlContext(toServletContext);
+        ruleExecutionOutput.setFollowRedirects(followRedirects);
+        ruleExecutionOutput.setUseSystemProperties(useSystemProperties);
         return RuleExecutionOutput.getRewritenUrl(toType, encodeToUrl, ruleExecutionOutput);
     }
 
@@ -247,5 +251,13 @@ public class NormalRule extends RuleBase implements Rule {
 
     public void setDropCookies(String value) {
         dropCookies = "true".equalsIgnoreCase(value);
+    }
+
+    public void setFollowRedirects(final boolean followRedirects){
+        this.followRedirects = followRedirects;
+    }
+
+    public void setUseSystemProperties(boolean useSystemProperties) {
+        this.useSystemProperties = useSystemProperties;
     }
 }

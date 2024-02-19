@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2023, Paul Tuckey
+ * Copyright (c) 2017-2024, Bloomreach
  * All rights reserved.
  * ====================================================================
  * Licensed under the BSD License. Text as follows.
@@ -32,51 +32,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * ====================================================================
  */
-package org.tuckey.web.filters.urlrewrite;
 
-import junit.framework.TestCase;
-import org.tuckey.web.testhelper.MockFilterConfig;
-import org.tuckey.web.testhelper.MockServletContext;
-import org.tuckey.web.filters.urlrewrite.utils.Log;
+package org.tuckey.web.filters.urlrewrite.utils;
 
-import jakarta.servlet.ServletException;
+import org.junit.Test;
 
-/**
- * @author Paul Tuckey
- * @version $Revision: 1 $ $Date: 2006-08-01 21:40:28 +1200 (Tue, 01 Aug 2006) $
- */
-public class UrlRewriteFilterTest extends TestCase {
+import static org.junit.Assert.*;
 
-    private UrlRewriteFilter filter;
+public class ValidationUtilsTest {
 
-    public void setUp() {
-        Log.setLevel("stdout:TRACE");
-        filter = new UrlRewriteFilter();
-        Log.setLevel("stdout:TRACE");
+    @Test
+    public void ok() {
+        ValidationUtils.validateNewLines("test", "me");
+        assertTrue(true);
+        ValidationUtils.validateNewLines("test");
+        assertTrue(true);
     }
 
-    public void tearDown() {
-        filter.destroy();
-        filter = null;
+    @Test(expected = IllegalArgumentException.class)
+    public void validateNewLinesKeyValue1() {
+        ValidationUtils.validateNewLines("test", "foo\nbar");
     }
 
-    public void testInit() throws ServletException {
-        filter.init(null);
-        filter.init(new MockFilterConfig());
+    @Test(expected = IllegalArgumentException.class)
+    public void validateNewLinesKeyValue11() {
+        ValidationUtils.validateNewLines("te\nst", "foobar");
     }
 
-    public void testVersion() throws ServletException {
-        String ver = UrlRewriteFilter.getFullVersionString();
-        System.out.println(ver);
-        // assertTrue("Ver bad " + ver, ver.matches("[0-9]+\\.[0-9]+\\.[0-9]+(-SNAPSHOT)? build [0-9a-z]+"));
-        // Bloomreach format
-        assertTrue("Version does not have 'x.y.z-hN' format: " + ver, ver.matches("([0-9])(\\.[0-9])+(-h[0-9])(-SNAPSHOT)? build [a-f,0-9]+"));
+    @Test(expected = IllegalArgumentException.class)
+    public void validateNewLinesKeyValue2() {
+        ValidationUtils.validateNewLines("test", "foo\rbar");
     }
 
-    public void testInitContext() throws ServletException {
-        MockFilterConfig mockFilterConfig = new MockFilterConfig();
-        mockFilterConfig.setServletContext(new MockServletContext());
-        filter.init(mockFilterConfig);
+    @Test(expected = IllegalArgumentException.class)
+    public void validateNewLinesKeyValue3() {
+        ValidationUtils.validateNewLines("test", "foo\n\rbar");
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void validateNewLinesValue1() {
+        ValidationUtils.validateNewLines("foo\nbar");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void validateNewLinesValue2() {
+        ValidationUtils.validateNewLines("foo\rbar");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void validateNewLinesValue3() {
+        ValidationUtils.validateNewLines("foo\r\n");
+    }
 }

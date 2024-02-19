@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2005-2023, Paul Tuckey
+ * Copyright (c) 2017-2024, Bloomreach
  * All rights reserved.
  * ====================================================================
  * Licensed under the BSD License. Text as follows.
@@ -32,51 +32,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * ====================================================================
  */
-package org.tuckey.web.filters.urlrewrite;
+package org.tuckey.web.filters.urlrewrite.utils;
 
-import junit.framework.TestCase;
-import org.tuckey.web.testhelper.MockFilterConfig;
-import org.tuckey.web.testhelper.MockServletContext;
-import org.tuckey.web.filters.urlrewrite.utils.Log;
-
-import jakarta.servlet.ServletException;
+import java.util.regex.Pattern;
 
 /**
- * @author Paul Tuckey
- * @version $Revision: 1 $ $Date: 2006-08-01 21:40:28 +1200 (Tue, 01 Aug 2006) $
+ * Input validation utilities
  */
-public class UrlRewriteFilterTest extends TestCase {
+public final class ValidationUtils {
 
-    private UrlRewriteFilter filter;
+    private static final Pattern CR_OR_LF = Pattern.compile("\\r|\\n");
 
-    public void setUp() {
-        Log.setLevel("stdout:TRACE");
-        filter = new UrlRewriteFilter();
-        Log.setLevel("stdout:TRACE");
+    private ValidationUtils() {
     }
 
-    public void tearDown() {
-        filter.destroy();
-        filter = null;
+    /**
+     * Check name and value for CWE-113 (HTTP Response Splitting)
+     *
+     * @param key   key
+     * @param value value
+     *              see https://cwe.mitre.org/data/definitions/113.html
+     */
+    public static void validateNewLines(String key, String value) {
+        if (containsNewLine(key) || containsNewLine(value)) {
+            throw new IllegalArgumentException("Invalid characters found (CR/LF) in header or cookie key: "
+                    + key + " value: "
+                    + value);
+        }
     }
 
-    public void testInit() throws ServletException {
-        filter.init(null);
-        filter.init(new MockFilterConfig());
+    /**
+     * Check name and value for CWE-113 (HTTP Response Splitting)
+     *
+     * @param value value
+     *              see https://cwe.mitre.org/data/definitions/113.html
+     */
+    public static void validateNewLines(String value) {
+        if (containsNewLine(value)) {
+            throw new IllegalArgumentException("Invalid characters found (CR/LF) in header or cookie " + value);
+        }
     }
 
-    public void testVersion() throws ServletException {
-        String ver = UrlRewriteFilter.getFullVersionString();
-        System.out.println(ver);
-        // assertTrue("Ver bad " + ver, ver.matches("[0-9]+\\.[0-9]+\\.[0-9]+(-SNAPSHOT)? build [0-9a-z]+"));
-        // Bloomreach format
-        assertTrue("Version does not have 'x.y.z-hN' format: " + ver, ver.matches("([0-9])(\\.[0-9])+(-h[0-9])(-SNAPSHOT)? build [a-f,0-9]+"));
+    private static boolean containsNewLine(String value) {
+        return value != null && CR_OR_LF.matcher(value).find();
     }
-
-    public void testInitContext() throws ServletException {
-        MockFilterConfig mockFilterConfig = new MockFilterConfig();
-        mockFilterConfig.setServletContext(new MockServletContext());
-        filter.init(mockFilterConfig);
-    }
-
 }

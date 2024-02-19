@@ -37,7 +37,13 @@ package org.tuckey.web.filters.urlrewrite;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
+
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Set;
+
+import org.tuckey.web.filters.urlrewrite.utils.Log;
 
 /**
  * Handles wrapping the response so we can encode the url's on the way "out" (ie, in JSP or servlet generation).
@@ -47,6 +53,8 @@ import java.util.HashMap;
  */
 public class UrlRewriteWrappedResponse extends HttpServletResponseWrapper {
 
+    private static final Log log = Log.getLog(UrlRewriteWrappedResponse.class);
+
     private UrlRewriter urlRerwiter;
     private HttpServletResponse httpServletResponse;
     private HttpServletRequest httpServletRequest;
@@ -55,12 +63,24 @@ public class UrlRewriteWrappedResponse extends HttpServletResponseWrapper {
     HashMap overridenRequestParameters;
     String overridenMethod;
 
+    private Set<String> disallowedDuplicateHeaders;
+
     public UrlRewriteWrappedResponse(HttpServletResponse httpServletResponse, HttpServletRequest httpServletRequest,
                                      UrlRewriter urlRerwiter) {
         super(httpServletResponse);
         this.httpServletResponse = httpServletResponse;
         this.httpServletRequest = httpServletRequest;
         this.urlRerwiter = urlRerwiter;
+        this.disallowedDuplicateHeaders = Collections.emptySet();
+    }
+
+    /**
+     * Constructor with disallowedDuplicateHeaders used by HippoRewriteFilter, external to this code base.
+     */
+    @SuppressWarnings("unused")
+    public UrlRewriteWrappedResponse(final HttpServletResponse hsResponse, final HttpServletRequest hsRequest, final UrlRewriter rewriter, final Set<String> disallowedDuplicateHeaders) {
+        this(hsResponse, hsRequest, rewriter);
+        this.disallowedDuplicateHeaders = disallowedDuplicateHeaders;
     }
 
     public String encodeURL(String s) {
@@ -154,5 +174,40 @@ public class UrlRewriteWrappedResponse extends HttpServletResponseWrapper {
 
     public void setOverridenMethod(String overridenMethod) {
         this.overridenMethod = overridenMethod;
+    }
+
+    @Override
+    public void addHeader(final String name, final String value) {
+        if (disallowedDuplicateHeaders == null || disallowedDuplicateHeaders.isEmpty()) {
+            // just print warning for duplicates
+            if (checkDuplicate(name)) {
+                log.warn("Adding duplicate header for name: " + name + " and value: " + value + ". Use debug level to print all values.");
+            }
+            super.addHeader(name, value);
+            return;
+        }
+        for (String disallowedName : disallowedDuplicateHeaders) {
+            if (disallowedName.equals(name)) {
+                if (checkDuplicate(name)) {
+                    log.info("Adding duplicate header disallowed for name: " + name + " and value: " + value + ". Use debug level to print all values.");
+                    return;
+                }
+            }
+        }
+        super.addHeader(name, value);
+    }
+
+
+    private boolean checkDuplicate(final String name) {
+        final Collection<String> values = httpServletResponse.getHeaders(name);
+        if (values != null && !values.isEmpty()) {
+            if (log.isDebugEnabled()) {
+                for (final String v : values) {
+                    log.debug("checkDuplicate (header, value):("+name +',' + v + ')');
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

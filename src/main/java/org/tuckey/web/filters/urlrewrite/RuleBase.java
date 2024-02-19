@@ -43,6 +43,7 @@ import org.tuckey.web.filters.urlrewrite.substitution.SubstitutionFilterChain;
 import org.tuckey.web.filters.urlrewrite.substitution.VariableReplacer;
 import org.tuckey.web.filters.urlrewrite.utils.Log;
 import org.tuckey.web.filters.urlrewrite.utils.RegexPattern;
+import org.tuckey.web.filters.urlrewrite.utils.RewriteUtils;
 import org.tuckey.web.filters.urlrewrite.utils.StringMatchingMatcher;
 import org.tuckey.web.filters.urlrewrite.utils.StringMatchingPattern;
 import org.tuckey.web.filters.urlrewrite.utils.StringMatchingPatternSyntaxException;
@@ -81,6 +82,7 @@ public class RuleBase implements Runnable {
     protected String name;
     private String note;
     protected String from;
+    protected String fromOriginal;
     protected String to;
     private boolean toEmpty;
     private String matchType;
@@ -401,12 +403,22 @@ public class RuleBase implements Runnable {
     }
 
     /**
+     * Getter for original (not URI encoded string)
+     */
+    public String getFromOriginal() {
+        return fromOriginal;
+    }
+
+    /**
      * Will set from, usually called by Digester.
      *
      * @param from the url to match from
      */
     public void setFrom(final String from) {
-        this.from = from;
+        this.fromOriginal = from;
+        if (!StringUtils.isBlank(from)) {
+            this.from = RewriteUtils.uriEncodeParts(from);
+        }
     }
 
     /**
@@ -575,5 +587,14 @@ public class RuleBase implements Runnable {
 
     public ServletContext getServletContext() {
         return servletContext;
+    }
+
+    @Override
+    public String toString() {
+        return "RuleBase{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", from='" + from + '\'' +
+                '}';
     }
 }

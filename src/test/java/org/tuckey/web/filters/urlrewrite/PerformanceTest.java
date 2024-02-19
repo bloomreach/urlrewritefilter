@@ -52,6 +52,7 @@ public class PerformanceTest extends TestCase {
             NormalRule rule = new NormalRule();
             rule.setFrom("^/([a-z]+)/([0-9]+)/" + i + "/$");
             rule.setTo("/blah/a/$2/");
+            rule.setToType("permanent-redirect");
             conf.addRule(rule);
         }
         conf.initialise();

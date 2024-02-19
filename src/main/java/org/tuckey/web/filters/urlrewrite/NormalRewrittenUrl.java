@@ -36,6 +36,7 @@ package org.tuckey.web.filters.urlrewrite;
 
 import org.tuckey.web.filters.urlrewrite.extend.RewriteMatch;
 import org.tuckey.web.filters.urlrewrite.utils.Log;
+import org.tuckey.web.filters.urlrewrite.utils.RewriteUtils;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.RequestDispatcher;
@@ -70,6 +71,8 @@ public class NormalRewrittenUrl implements RewrittenUrl {
     private boolean stopFilterChain = false;
     private boolean noSubstitution = false;
     private boolean dropCookies = true;
+    private boolean followRedirects = true;
+    private boolean useSystemProperties = false;
     private RewriteMatch rewriteMatch;
     private ServletContext targetContext = null;
 
@@ -85,6 +88,8 @@ public class NormalRewrittenUrl implements RewrittenUrl {
         this.rewriteMatch = ruleExecutionOutput.getRewriteMatch();
         this.noSubstitution = ruleExecutionOutput.isNoSubstitution();
         this.dropCookies = ruleExecutionOutput.shouldDropCookies();
+        this.followRedirects = ruleExecutionOutput.isFollowRedirects();
+        this.useSystemProperties = ruleExecutionOutput.isUseSystemProperties();
     }
 
     /**
@@ -200,7 +205,7 @@ public class NormalRewrittenUrl implements RewrittenUrl {
      * @param hsResponse
      * @param chain
      * @return True if the request was rewritten otherwise false.
-     * @throws javax.servlet.ServletException
+     * @throws jakarta.servlet.ServletException
      * @throws java.io.IOException
      */
     public boolean doRewrite(final HttpServletRequest hsRequest,
@@ -257,6 +262,8 @@ public class NormalRewrittenUrl implements RewrittenUrl {
                 if (isEncode()) {
                     target = hsResponse.encodeRedirectURL(target);
                 }
+                // Bloomreach modification on behalf of non-ASCII characters
+                target = RewriteUtils.encodeRedirect(target);
                 hsResponse.sendRedirect(target);
                 if (log.isTraceEnabled()) log.trace("redirected to " + target);
             }
@@ -270,6 +277,8 @@ public class NormalRewrittenUrl implements RewrittenUrl {
                 if (isEncode()) {
                     target = hsResponse.encodeRedirectURL(target);
                 }
+                // Bloomreach modification on behalf of non-ASCII characters
+                target = RewriteUtils.encodeRedirect(target);
                 hsResponse.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
                 hsResponse.setHeader("Location", target);
                 if (log.isTraceEnabled()) log.trace("temporarily redirected to " + target);
@@ -284,6 +293,8 @@ public class NormalRewrittenUrl implements RewrittenUrl {
                 if (isEncode()) {
                     target = hsResponse.encodeRedirectURL(target);
                 }
+                // Bloomreach modification on behalf of non-ASCII characters
+                target = RewriteUtils.encodeRedirect(target);
                 hsResponse.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
                 hsResponse.setHeader("Location", target);
                 if (log.isTraceEnabled()) log.trace("permanently redirected to " + target);
@@ -298,6 +309,8 @@ public class NormalRewrittenUrl implements RewrittenUrl {
                 if (isEncode()) {
                     target = hsResponse.encodeRedirectURL(target);
                 }
+                // Bloomreach modification on behalf of non-ASCII characters
+                target = RewriteUtils.encodeRedirect(target);
                 hsResponse.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
                 hsResponse.setHeader("Location", target);
                 if (log.isDebugEnabled()) log.debug("temporarily redirected (with response 307) to " + target);
@@ -312,6 +325,8 @@ public class NormalRewrittenUrl implements RewrittenUrl {
                 if (isEncode()) {
                     target = hsResponse.encodeRedirectURL(target);
                 }
+                // Bloomreach modification on behalf of non-ASCII characters
+                target = RewriteUtils.encodeRedirect(target);
                 hsResponse.setStatus(308);
                 hsResponse.setHeader("Location", target);
                 if (log.isDebugEnabled()) log.debug("permanently redirected (with response 308) to " + target);
@@ -322,7 +337,8 @@ public class NormalRewrittenUrl implements RewrittenUrl {
             if (hsResponse.isCommitted()) {
                 log.error("response is committed. cannot proxy " + target + ". Check that you havn't written to the response before.");
             } else {
-                RequestProxy.execute(target, hsRequest, hsResponse, dropCookies);
+                // Bloomreach modification with regard to followRedirects, useSystemProperties
+                RequestProxy.execute(target, hsRequest, hsResponse, dropCookies, followRedirects, useSystemProperties);
                 if (log.isTraceEnabled()) {
                     log.trace("Proxied request to " + target);
                 }

@@ -112,6 +112,14 @@ public class ConfTest extends TestCase {
 
         CatchElem catchElem = (CatchElem) catches.get(0);
         assertEquals(true, catchElem.isValid());
+
+        // CDATA:
+        final NormalRule cdataRule = (NormalRule) rules.get(3);
+        assertNotNull(cdataRule);
+        final String from = cdataRule.getFrom();
+        assertEquals("(.*)", from);
+        final String to = cdataRule.getTo();
+        assertEquals("https:///very/newdir/$1", to);
     }
 
 

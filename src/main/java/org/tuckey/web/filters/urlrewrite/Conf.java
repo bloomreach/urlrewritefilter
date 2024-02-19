@@ -38,6 +38,7 @@ import org.tuckey.web.filters.urlrewrite.gzip.GzipFilter;
 import org.tuckey.web.filters.urlrewrite.utils.Log;
 import org.tuckey.web.filters.urlrewrite.utils.ModRewriteConfLoader;
 import org.tuckey.web.filters.urlrewrite.utils.StringUtils;
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -254,6 +255,8 @@ public class Conf {
                 rule.setQueryStringAppend(getAttrValue(toNode, "qsappend"));
                 rule.setDropCookies(getAttrValue(toNode, "drop-cookies"));
                 if ("true".equalsIgnoreCase(getAttrValue(toNode, "encode"))) rule.setEncodeToUrl(true);
+                rule.setFollowRedirects("true".equals(getAttrValue(toNode, "followRedirects")));
+                rule.setUseSystemProperties("true".equals((getAttrValue(toNode, "useSystemProperties"))));
 
                 processSetAttributes(ruleElement, rule);
 
@@ -407,9 +410,14 @@ public class Conf {
         if (nodeList == null) return null;
         Node child = nodeList.item(0);
         if (child == null) return null;
-        if ((child.getNodeType() == Node.TEXT_NODE)) {
+        final short nodeType = child.getNodeType();
+        if ((nodeType == Node.TEXT_NODE)) {
             String value = ((Text) child).getData();
             return value.trim();
+        }
+        if (nodeType == Node.CDATA_SECTION_NODE) {
+            final CharacterData cd = (CharacterData) child;
+            return cd.getData().trim();
         }
         return null;
     }
