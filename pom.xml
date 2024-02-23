@@ -4,7 +4,7 @@
     <groupId>org.tuckey</groupId>
     <artifactId>urlrewritefilter</artifactId>
     <packaging>jar</packaging>
-    <version>5.1.3-h1</version>
+    <version>5.1.3-h2-SNAPSHOT</version>
     <name>UrlRewriteFilter</name>
     <url>http://www.tuckey.org/urlrewrite/</url>
     <inceptionYear>2001</inceptionYear>
